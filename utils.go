@@ -1,10 +1,7 @@
 package Saksuka
 
-import "fmt"
-
 func TokensToString(tokens []MessageToken) string {
 	retval := "";
-	fmt.Println(tokens)
 	for _,v := range tokens {
 		switch v.T {
 			case "text": retval += v.V.(string);
