@@ -18,7 +18,7 @@ type authPost struct {
 	 ApiKey string `json:"apiKey"`
 }
 
-//Untested yet
+
 func Auth(apiKey string) (*AuthResponse, error) {
 	postData := authPost{ApiKey: apiKey};
 	dataString, err := json.Marshal(postData);

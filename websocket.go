@@ -192,7 +192,7 @@ func (con *Connection) send(op string, data interface{}, params ...string) {
 	err = con.Socket.WriteMessage(websocket.TextMessage, []byte(raw));
 
 	if err != nil {
-		fmt.Println("Failed to auth. Error: " + err.Error());
+		fmt.Println("Failed to send ws message. Error: " + err.Error());
 		con.Connected = false;
 	}
 }
@@ -218,7 +218,7 @@ func (con *Connection) sendCast(op string, data interface{}, params ...string) {
 	err = con.Socket.WriteMessage(websocket.TextMessage, []byte(raw));
 
 	if err != nil {
-		fmt.Println("Failed to auth. Error: " + err.Error());
+		fmt.Println("Failed to send cast ws message. Error: " + err.Error());
 		con.Connected = false;
 	}
 }
