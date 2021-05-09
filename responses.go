@@ -47,6 +47,10 @@ type OnSpeakerAddedEvent struct {
 
 type OnSpeakerRemovedEvent OnSpeakerAddedEvent;
 
+type OnReadyEvent struct {
+	User User `json:"user"`
+}
+
 type SearchResult struct {
 	Items []interface{} `json:"items"`
 	Rooms []Room `json:"rooms"`

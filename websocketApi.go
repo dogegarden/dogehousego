@@ -12,7 +12,7 @@ func (con *Connection) OnNewChatMessage(handler func(event OnNewMessageEvent, er
 	con.addListener("new_chat_msg", func(listenerHandler ListenerHandler) {
 		var invokeArg OnNewMessageEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -20,7 +20,7 @@ func (con *Connection) OnNewRoomDetails(handler func(event OnNewRoomDetailsEvent
 	con.addListener("new_room_details", func(listenerHandler ListenerHandler) {
 		var invokeArg OnNewRoomDetailsEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -28,7 +28,7 @@ func (con *Connection) OnUserJoinRoom(handler func(event OnUserJoinRoomEvent, er
 	con.addListener("new_user_join_room", func(listenerHandler ListenerHandler) {
 		var invokeArg OnUserJoinRoomEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -36,7 +36,7 @@ func (con *Connection) OnUserLeaveRoom(handler func(event OnUserLeftRoomEvent, e
 	con.addListener("user_left_room", func(listenerHandler ListenerHandler) {
 		var invokeArg OnUserLeftRoomEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -44,7 +44,7 @@ func (con *Connection) OnInvitationToRoom(handler func(event OnInvitationToRoomE
 	con.addListener("invitation_to_room", func(listenerHandler ListenerHandler) {
 		var invokeArg OnInvitationToRoomEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -52,7 +52,7 @@ func (con *Connection) OnHandRaised(handler func(event OnHandRaisedEvent, err er
 	con.addListener("hand_raised", func(listenerHandler ListenerHandler) {
 		var invokeArg OnHandRaisedEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -60,7 +60,7 @@ func (con *Connection) OnSpeakerAdded(handler func(event OnSpeakerAddedEvent, er
 	con.addListener("speaker_added", func(listenerHandler ListenerHandler) {
 		var invokeArg OnSpeakerAddedEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -68,7 +68,15 @@ func (con *Connection) OnSpeakerRemoved(handler func(event OnSpeakerRemovedEvent
 	con.addListener("speaker_removed", func(listenerHandler ListenerHandler) {
 		var invokeArg OnSpeakerRemovedEvent;
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
-		handler(invokeArg, err);
+		go handler(invokeArg, err);
+	})
+}
+
+func (con *Connection) OnReady(handler func(event OnReadyEvent, err error)) {
+	con.addListener("auth-good", func(listenerHandler ListenerHandler) {
+		var invokeArg OnReadyEvent;
+		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
+		go handler(invokeArg, err);
 	})
 }
 
@@ -183,6 +191,7 @@ func (con *Connection) GetTopPublicRooms(cursor int) (GetTopPublicRoomsResponse,
 	resp, err := con.fetch("get_top_public_rooms", map[string]interface{}{
 		"cursor": cursor,
 	});
+	fmt.Println()
 	var retval GetTopPublicRoomsResponse;
 
 	if err != nil {
