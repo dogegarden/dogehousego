@@ -296,8 +296,6 @@ func (con *Connection) UserCreateBot(username string) (*UserCreateBotResponse, e
 		"username": username,
 	});
 
-	fmt.Println(resp);
-
 	var retval UserCreateBotResponse;
 
 	if err != nil {
@@ -353,8 +351,6 @@ func (con *Connection) CreateScheduledRoom(name, description string, scheduledFo
 		"scheduledFor": scheduledFor.Format(time.RFC3339),
 	});
 
-	fmt.Println(resp);
-
 	var retval CreateScheduledRoomResponse;
 
 	if err != nil {
@@ -364,6 +360,137 @@ func (con *Connection) CreateScheduledRoom(name, description string, scheduledFo
 	if val, ok := resp.Data.(map[string]interface{})["error"]; ok {
 		fmt.Println(val)
 		return nil,errors.New(val.(string));
+	}
+
+	err = mapstructure.Decode(resp.Data, &retval);
+
+	return &retval, err;
+}
+
+func (con *Connection) EditScheduledRoom(id, name, description string, scheduledFor time.Time) (*EditScheduledRoomResponse, error) {
+	resp, err := con.fetch("edit_scheduled_room", map[string]interface{}{
+		"id": id,
+		"data": map[string]interface{} {
+			"name": name,
+			"description": description,
+			"scheduledFor": scheduledFor.Format(time.RFC3339),
+		},
+	});
+
+	var retval EditScheduledRoomResponse;
+
+	if err != nil {
+		return nil, err;
+	}
+
+	if val, ok := resp.Data.(map[string]interface{})["error"]; ok {
+		fmt.Println(val)
+		return nil,errors.New(val.(string));
+	}
+
+	err = mapstructure.Decode(resp.Data, &retval);
+
+	return &retval, err;
+}
+
+func (con *Connection) AskToSpeak() {
+	con.send("ask_to_speak", map[string]interface{}{});
+}
+
+func (con *Connection) InviteToRoom(userId string) {
+	con.send("invite_to_room", map[string]interface{}{
+		"userId": userId,
+	});
+}
+
+func (con *Connection) SpeakingChange(value bool) {
+	con.send("invite_to_room", map[string]interface{}{
+		"value": value,
+	});
+}
+
+func (con *Connection) UnbanFromRoom(userId string) error {
+	_, err := con.fetch("unban_from_room", map[string]interface{}{
+		"userId ": userId,
+	});
+
+	return err;
+}
+
+func (con *Connection) Follow(userId string) error {
+	_, err := con.fetch("follow", map[string]interface{}{
+		"userId ": userId,
+	});
+
+	return err;
+}
+
+func (con *Connection) SendRoomChatMessage(message string, whisperedTo ...UUID) {
+	con.send("send_room_chat_msg", map[string]interface{}{
+		"tokens ": StringToToken(message),
+		"whisperedTo": whisperedTo,
+	});
+}
+
+func (con *Connection) ChangeModStatus(userId string, value bool) {
+	con.send("change_mod_status", map[string]interface{}{
+		"userId ": userId,
+		"value": value,
+	});
+}
+
+func (con *Connection) ChangeRoomCreator(userId string) {
+	con.send("change_room_creator", map[string]interface{}{
+		"userId ": userId,
+	});
+}
+
+func (con *Connection) AddSpeaker(userId string) {
+	con.send("add_speaker", map[string]interface{}{
+		"userId ": userId,
+	});
+}
+
+func (con *Connection) DeleteRoomChatMessage(userId, messageId string) {
+	con.send("delete_room_chat_message", map[string]interface{}{
+		"userId ": userId,
+		"messageId": messageId,
+	});
+}
+
+func (con *Connection) UnbanFromRoomChat(userId string) {
+	con.send("unban_from_room_chat", map[string]interface{}{
+		"userId ": userId,
+	});
+}
+
+func (con *Connection) BanFromRoomChat(userId string) {
+	con.send("ban_from_room_chat", map[string]interface{}{
+		"userId ": userId,
+	});
+}
+
+func (con *Connection) SetListener(userId string) {
+	con.send("set_listener", map[string]interface{}{
+		"userId ": userId,
+	});
+}
+
+func (con *Connection) SetMute(isMuted bool) error {
+	_, err := con.fetch("mute", map[string]interface{}{
+		"value": isMuted,
+	});
+
+	return err;
+}
+
+func (con *Connection) LeaveRoom() (*LeaveRoomResponse, error) {
+	resp, err := con.fetch("leave_room", map[string]interface{}{});
+
+	var retval LeaveRoomResponse;
+
+	if err != nil {
+		return nil, err;
 	}
 
 	err = mapstructure.Decode(resp.Data, &retval);

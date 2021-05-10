@@ -107,3 +107,9 @@ type UserCreateBotResponse struct {
 type CreateScheduledRoomResponse struct {
 	ScheduledRoom ScheduledRoom `json:"scheduledRoom"`
 }
+
+type EditScheduledRoomResponse CreateScheduledRoomResponse
+
+type LeaveRoomResponse struct {
+	RoomId UUID `json:"roomId"`
+}

@@ -5,9 +5,9 @@ func TokensToString(tokens []MessageToken) string {
 	for _,v := range tokens {
 		switch v.T {
 			case "text": retval += v.V.(string);
-			case "mention": retval += `@${`+v.V.(string)+`}`;
+			case "mention": retval += `@`+v.V.(string);
 			case "link": retval += v.V.(string);
-			case "emote": retval += `:${`+v.V.(string)+`}:`;
+			case "emote": retval += `:`+v.V.(string)+`:`;
 			case "block": retval +="`"+v.V.(string)+"`";
 			default: retval += "";
 		}
@@ -15,4 +15,11 @@ func TokensToString(tokens []MessageToken) string {
 	}
 
 	return retval;
+}
+
+func StringToToken(input string) MessageToken {
+	return MessageToken{
+		T: "text",
+		V: input,
+	}
 }
