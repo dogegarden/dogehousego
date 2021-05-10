@@ -1,4 +1,4 @@
-package Saksuka
+package dogehousego
 
 type OnNewMessageEvent struct {
 	Msg Message `json:"msg"`

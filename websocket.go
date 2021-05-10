@@ -1,4 +1,4 @@
-package Saksuka
+package dogehousego
 
 import (
 	"encoding/json"
@@ -234,7 +234,11 @@ func (con *Connection) sendCall(op string, data interface{}, params ...string) (
 	if len(params) > 0 {
 		doneOpCode = params[0];
 	} else {
-		ref = fmt.Sprintf("%s", uuid.NewV4());
+		uid, err := uuid.NewV4();
+		if err != nil {
+			return nil, err;
+		}
+		ref = fmt.Sprintf("%s", uid);
 	}
 
 	response := make(chan ListenerHandler);
@@ -275,7 +279,11 @@ func (con *Connection) fetch(op string, data interface{}, params ...string) (*Li
 	if len(params) > 0 {
 		doneOpCode = params[0];
 	} else {
-		ref = fmt.Sprintf("%s", uuid.NewV4());
+		uid, err := uuid.NewV4();
+		if err != nil {
+			return nil, err;
+		}
+		ref = fmt.Sprintf("%s", uid);
 	}
 
 	response := make(chan ListenerHandler);
