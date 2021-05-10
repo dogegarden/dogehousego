@@ -47,33 +47,33 @@ package main
 
 import (
 	"fmt"
-	"github.com/Explooosion-code/Saksuka"
+	"github.com/dogegarden/dogehousego"
 )
 
 func main() {
-	retval, err := Saksuka.Auth("your-api-key")
+	retval, err := dogehousego.Auth("your-api-key")
 	if err != nil {
 		fmt.Println(err.Error())
 		return;
 	}
 
-	con := Saksuka.Connection{
+	con := dogehousego.Connection{
 		AccessToken:  retval.AccessToken,
 		RefreshToken: retval.RefreshToken,
 	}
 
-	con.OnNewChatMessage(func(event Saksuka.OnNewMessageEvent, err error) {
+	con.OnNewChatMessage(func(event dogehousego.OnNewMessageEvent, err error) {
 		if err != nil {
 			fmt.Println("New chat message error! " + err.Error());
 			return;
 		}
 
-		message := Saksuka.TokensToString(event.Msg.Tokens)
+		message := dogehousego.TokensToString(event.Msg.Tokens)
 
 		fmt.Println(message)
 	});
 
-	con.OnReady(func(event Saksuka.OnReadyEvent, err error) {
+	con.OnReady(func(event dogehousego.OnReadyEvent, err error) {
 
 		if err != nil {
 			fmt.Println("Error while logging in!: " + err.Error())
@@ -96,6 +96,6 @@ func main() {
 		fmt.Printf("Joined room: %s | User count: %d\n", info.Room.Name, len(info.Users));
 	});
 
-	fmt.Println(con.Start()) // This returns an error if present
+	fmt.Println(con.Start())
 }
 ```
