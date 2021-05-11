@@ -28,6 +28,7 @@ type Connection struct {
 	Ready bool
 	Connected bool
 	Listeners []*Listener
+	ToRemove []*Listener
 	DebugLog bool
 }
 
@@ -40,9 +41,12 @@ func (con *Connection) indexOfListener(listener * Listener) (int) {
 	return -1    //not found.
 }
 
-func (con *Connection) removeListener(i int) {
+func (con *Connection) removeListener(i int, j int) {
 	con.Listeners[i] = con.Listeners[len(con.Listeners)-1]
 	con.Listeners = con.Listeners[:len(con.Listeners)-1];
+
+	con.ToRemove[j] = con.ToRemove[len(con.ToRemove)-1]
+	con.ToRemove = con.ToRemove[:len(con.ToRemove)-1];
 }
 
 func (con *Connection) addListener(opCode string, handler func(listenerHandler ListenerHandler)) func() {
@@ -54,19 +58,24 @@ func (con *Connection) addListener(opCode string, handler func(listenerHandler L
 	con.Listeners = append(con.Listeners, &listener);
 
 	return func() { // Delete item from the list
-		index := con.indexOfListener(&listener);
-		con.removeListener(index);
+		con.ToRemove = append(con.ToRemove, &listener);
 	}
 }
 
 func (con *Connection) Start() error  {
-	fmt.Println("Opening websocket connection")
+	if(con.DebugLog) {
+		fmt.Println("Opening websocket connection")
+	}
 	c, _, err := websocket.DefaultDialer.Dial(WebsocketBaseUrl, nil);
 
 	if err != nil {
 		return errors.New("Error connecting to websocket. Error: " + err.Error());
 	}
-	fmt.Println("Socket opened")
+
+	if(con.DebugLog) {
+		fmt.Println("Socket opened")
+	}
+
 	con.Connected = true;
 
 	con.Socket  = c;
@@ -77,6 +86,14 @@ func (con *Connection) Start() error  {
 		for {
 			if !con.Connected {
 				break;
+			}
+
+			for k, v := range con.ToRemove {
+				index := con.indexOfListener(v);
+				if index == -1 {
+					continue
+				}
+				con.removeListener(index, k);
 			}
 
 			_, message, err := con.Socket.ReadMessage();
@@ -133,7 +150,7 @@ func (con *Connection) Start() error  {
 						data = obj["p"];
 					}
 
-					v.Handler(ListenerHandler{
+					go v.Handler(ListenerHandler{
 						Data:    data,
 						FetchId: fetch,
 					})

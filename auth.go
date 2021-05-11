@@ -40,5 +40,9 @@ func Auth(apiKey string) (*AuthResponse, error) {
 		return nil, errors.New("Failed to unmarshal response auth data. Error: " + err.Error());
 	}
 
+	if retVal.Error != "" {
+		return nil, errors.New("Failed to get tokens from api-key. Reason: " + retVal.Error);
+	}
+
 	return retVal, nil;
 }

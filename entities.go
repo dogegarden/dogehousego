@@ -8,9 +8,9 @@ type ChatMode string;
 type WhisperPrivacySetting string;
 
 const (
-	Default      ChatMode = "default"
-	Disabled     ChatMode = "disabled"
-	FollowerOnly ChatMode = "follower_only"
+	ChatModeDefault      ChatMode = "default"
+	ChatModeDisabled     ChatMode = "disabled"
+	ChatModeFollowerOnly ChatMode = "follower_only"
 
 	WhisperPrivacyOn WhisperPrivacySetting = "on"
 	WhisperPrivacyOff WhisperPrivacySetting = "off"
