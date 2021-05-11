@@ -28,6 +28,7 @@ type Connection struct {
 	Ready bool
 	Connected bool
 	Listeners []*Listener
+	ToRemove []int
 	DebugLog bool
 }
 
@@ -55,18 +56,24 @@ func (con *Connection) addListener(opCode string, handler func(listenerHandler L
 
 	return func() { // Delete item from the list
 		index := con.indexOfListener(&listener);
-		con.removeListener(index);
+		con.ToRemove = append(con.ToRemove, index);
 	}
 }
 
 func (con *Connection) Start() error  {
-	fmt.Println("Opening websocket connection")
+	if(con.DebugLog) {
+		fmt.Println("Opening websocket connection")
+	}
 	c, _, err := websocket.DefaultDialer.Dial(WebsocketBaseUrl, nil);
 
 	if err != nil {
 		return errors.New("Error connecting to websocket. Error: " + err.Error());
 	}
-	fmt.Println("Socket opened")
+
+	if(con.DebugLog) {
+		fmt.Println("Socket opened")
+	}
+
 	con.Connected = true;
 
 	con.Socket  = c;
@@ -77,6 +84,10 @@ func (con *Connection) Start() error  {
 		for {
 			if !con.Connected {
 				break;
+			}
+
+			for _, v := range con.ToRemove {
+				con.removeListener(v);
 			}
 
 			_, message, err := con.Socket.ReadMessage();
@@ -133,7 +144,7 @@ func (con *Connection) Start() error  {
 						data = obj["p"];
 					}
 
-					v.Handler(ListenerHandler{
+					go v.Handler(ListenerHandler{
 						Data:    data,
 						FetchId: fetch,
 					})
