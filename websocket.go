@@ -14,6 +14,7 @@ type Token string;
 type ListenerHandler struct {
 	Data interface{} `json:"data"`
 	FetchId string `json:"fetchId"`
+	Error error `json:"error"`
 }
 
 type Listener struct {
@@ -98,9 +99,7 @@ func (con *Connection) Start() error  {
 
 			_, message, err := con.Socket.ReadMessage();
 			if err != nil {
-				if con.DebugLog {
-					fmt.Println("Fatal error! Closing socket. Error: " + err.Error());
-				}
+				fmt.Println("Fatal error! Closing socket. Error: " + err.Error());
 				con.Connected = false;
 				break;
 			}
@@ -150,9 +149,23 @@ func (con *Connection) Start() error  {
 						data = obj["p"];
 					}
 
+					var handlerError error = nil;
+
+					if objErr, ok := obj["e"].(map[string]interface{}); ok {
+						fmt.Println("TEST")
+						errString := "";
+
+						for k,v := range objErr {
+							errString += fmt.Sprintf("%s %s", k, v);
+						}
+
+						handlerError = errors.New(errString);
+					}
+
 					go v.Handler(ListenerHandler{
 						Data:    data,
 						FetchId: fetch,
+						Error: handlerError,
 					})
 				}
 			}

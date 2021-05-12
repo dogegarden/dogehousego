@@ -75,7 +75,14 @@ func (con *Connection) OnSpeakerRemoved(handler func(event OnSpeakerRemovedEvent
 func (con *Connection) OnReady(handler func(event OnReadyEvent, err error)) {
 	con.addListener("auth-good", func(listenerHandler ListenerHandler) {
 		var invokeArg OnReadyEvent;
+
+		if listenerHandler.Error != nil {
+			handler(invokeArg, listenerHandler.Error);
+			return;
+		}
+
 		err := mapstructure.Decode(listenerHandler.Data, &invokeArg);
+
 		handler(invokeArg, err);
 	})
 }
