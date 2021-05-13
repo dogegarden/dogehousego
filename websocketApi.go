@@ -504,3 +504,26 @@ func (con *Connection) LeaveRoom() (*LeaveRoomResponse, error) {
 
 	return &retval, err;
 }
+
+func (con *Connection) CreateRoom(name, privacy, description string) (*CreateRoomResponse, error) {
+	resp, err := con.fetch("create_room", map[string]interface{}{
+		"name": name,
+		"description": description,
+		"privacy": privacy,
+	});
+
+	var retval CreateRoomResponse;
+
+	if err != nil {
+		return nil, err;
+	}
+
+	if val, ok := resp.Data.(map[string]interface{})["error"]; ok {
+		fmt.Println(val)
+		return nil,errors.New(val.(string));
+	}
+
+	err = mapstructure.Decode(resp.Data, &retval);
+
+	return &retval, err;
+}
