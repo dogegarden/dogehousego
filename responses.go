@@ -113,3 +113,7 @@ type EditScheduledRoomResponse CreateScheduledRoomResponse
 type LeaveRoomResponse struct {
 	RoomId UUID `json:"roomId"`
 }
+
+type CreateRoomResponse struct {
+	Room Room `json:"room"`
+}
