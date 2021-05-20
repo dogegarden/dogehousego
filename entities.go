@@ -136,6 +136,10 @@ type Message struct {
 	IsWhisper bool `json:"isWhisper"`
 }
 
+func (m *Message) GetMessageString() string {
+	return TokensToString(m.Tokens);
+}
+
 type BaseUser struct {
 	Username string `json:"username"`
 	Online bool `json:"online"`
