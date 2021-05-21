@@ -29,11 +29,11 @@ type Connection struct {
 	Ready bool
 	Connected bool
 	Listeners []*Listener
-	ToRemove []*Listener
+	ToRemove chan *Listener
 	DebugLog bool
 }
 
-func (con *Connection) indexOfListener(listener * Listener) (int) {
+func (con *Connection) indexOfListener(listener * Listener) int {
 	for k, v := range con.Listeners {
 		if listener == v {
 			return k
@@ -42,12 +42,9 @@ func (con *Connection) indexOfListener(listener * Listener) (int) {
 	return -1    //not found.
 }
 
-func (con *Connection) removeListener(i int, j int) {
+func (con *Connection) removeListener(i int) {
 	con.Listeners[i] = con.Listeners[len(con.Listeners)-1]
 	con.Listeners = con.Listeners[:len(con.Listeners)-1];
-
-	con.ToRemove[j] = con.ToRemove[len(con.ToRemove)-1]
-	con.ToRemove = con.ToRemove[:len(con.ToRemove)-1];
 }
 
 func (con *Connection) addListener(opCode string, handler func(listenerHandler ListenerHandler)) func() {
@@ -59,7 +56,7 @@ func (con *Connection) addListener(opCode string, handler func(listenerHandler L
 	con.Listeners = append(con.Listeners, &listener);
 
 	return func() { // Delete item from the list
-		con.ToRemove = append(con.ToRemove, &listener);
+		con.ToRemove <- &listener;
 	}
 }
 
@@ -77,6 +74,8 @@ func (con *Connection) Start() error  {
 		fmt.Println("Socket opened")
 	}
 
+	con.ToRemove = make(chan *Listener, 100);
+
 	con.Connected = true;
 
 	con.Socket  = c;
@@ -89,13 +88,22 @@ func (con *Connection) Start() error  {
 				break;
 			}
 
-			for k, v := range con.ToRemove {
-				index := con.indexOfListener(v);
-				if index == -1 {
-					continue
+			ok := false;
+			for !ok { // Delete scheduled listeners
+				select {
+
+				case v := <- con.ToRemove:
+					index := con.indexOfListener(v);
+					if index == -1 {
+						continue
+					}
+					con.removeListener(index);
+				default: // No listeners left so break out of the loop
+					ok = true;
 				}
-				con.removeListener(index, k);
+
 			}
+
 
 			_, message, err := con.Socket.ReadMessage();
 			if err != nil {
@@ -107,7 +115,7 @@ func (con *Connection) Start() error  {
 
 			msg := string(message);
 
-			if msg == "pong" || msg == `"pong""` {
+			if msg == "pong" || msg == `"pong""` { // We don't want to do anything with those
 				continue;
 			}
 
@@ -130,10 +138,12 @@ func (con *Connection) Start() error  {
 				con.Ready = true;
 			}
 
+			// Execute listeners
 			for _,v := range con.Listeners {
 				if v.Opcode == op {
 					var fetch string;
 
+					// We need this ugly crap to handle both versions of request
 					if val, ok := obj["fetchId"].(string); ok {
 						fetch = val;
 					} else if val, ok := obj["ref"].(string); ok {
@@ -144,6 +154,7 @@ func (con *Connection) Start() error  {
 
 					var data interface{};
 
+					// Also 2 versions of api
 					if val, ok := obj["d"]; ok {
 						data = val;
 					} else {
@@ -152,8 +163,8 @@ func (con *Connection) Start() error  {
 
 					var handlerError error = nil;
 
+					// Handle any errors
 					if objErr, ok := obj["e"].(map[string]interface{}); ok {
-						fmt.Println("TEST")
 						errString := "";
 
 						for k,v := range objErr {
@@ -163,6 +174,7 @@ func (con *Connection) Start() error  {
 						handlerError = errors.New(errString);
 					}
 
+					// Run as goroutine to not hang main loop
 					go v.Handler(ListenerHandler{
 						Data:    data,
 						FetchId: fetch,
@@ -173,6 +185,7 @@ func (con *Connection) Start() error  {
 		}
 	}();
 
+	// Loop to send ping messages
 	go func() {
 		for {
 			if !con.Connected {
@@ -186,6 +199,7 @@ func (con *Connection) Start() error  {
 		}
 	}()
 
+	// Send authentication data
 	var authData = map[string]interface{}{
 		"accessToken": con.AccessToken,
 		"refreshToken": con.RefreshToken,
@@ -197,6 +211,7 @@ func (con *Connection) Start() error  {
 
 	con.send("auth", authData);
 
+	// Keep main routine alive while connection is open
 	for con.Connected {
 		time.Sleep(time.Millisecond)
 	}
